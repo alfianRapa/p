@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ngecor.id - Kalkulator Bangunan & Material</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            colors: {
+                brand: {
+                    DEFAULT: '#EE7D11',
+                    hover: '#D66C0B',
+                    light: '#FFF4EA',
+                    border: '#FDBA74',
+                    dark: '#333333'
+                }
+            },
+            fontFamily: {
+                sans: ['Inter', 'sans-serif']
+            }
+        }
+    }
+};
+</script>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+rel="stylesheet">
+
+<style>
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #F3F4F6;
+}
+
+.beaker {
+    position: relative;
+    width: 80px;
+    height: 110px;
+    border: 4px solid #4B5563;
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    background: white;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
+.beaker::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -10px;
+    right: -10px;
+    height: 8px;
+    border: 4px solid #4B5563;
+    border-radius: 4px;
+    background: #374151;
+}
+
+.beaker-fill {
+    width: 100%;
+    transition: height .5s ease;
+}
+
+.fill-semen { background: #9CA3AF; }
+.fill-pasir { background: #D97706; }
+.fill-kerikil { background: #6B7280; }
+.fill-air { background: #3B82F6; }
+
+@media print {
+    .no-print,
+    #splash-screen,
+    #exit-modal {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+    }
+
+    .print-card {
+        border: 1px solid #ccc;
+        box-shadow: none;
+    }
+
+    #tab-ringkasan {
+        display: block !important;
+    }
+}
+</style>
+</head>
+
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+<!-- SPLASH SCREEN -->
+<div id="splash-screen"
+class="fixed inset-0 bg-slate-100 z-50 flex items-center justify-center transition-opacity duration-500">
+
+    <div class="bg-white p-8 rounded-3xl shadow-xl flex flex-col items-center max-w-md w-11/12 border">
+
+        <div class="flex items-center gap-3 mb-6">
+            <div class="p-3 bg-brand-light rounded-2xl border border-brand-border">
+                <i class="fa-solid fa-building text-4xl text-brand"></i>
+            </div>
+
+            <div>
+                <h1 class="text-3xl font-extrabold">
+                    Ngecor<span class="text-brand">.id</span>
+                </h1>
+                <p class="text-xs text-slate-500 uppercase tracking-widest">
+                    Kalkulator Bangunan
+                </p>
+            </div>
+        </div>
+
+        <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden mb-3">
+            <div id="splash-progress"
+            class="bg-brand h-full w-0 transition-all duration-1000"></div>
+        </div>
+
+        <p class="text-xs text-slate-400">
+            Memuat Sistem Material & Perhitungan...
+        </p>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="max-w-6xl mx-auto w-full px-4 py-4 md:py-6 flex-1 flex flex-col">
+
+<!-- HEADER -->
+<header class="bg-white rounded-2xl p-4 shadow-sm border mb-6 no-print">
+
+    <div class="flex flex-wrap items-center justify-between gap-4">
+
+        <button onclick="goToHome()"
+        class="flex items-center gap-3">
+
+            <div class="p-2 bg-brand-light rounded-xl border border-brand-border">
+                <i class="fa-solid fa-building text-3xl text-brand"></i>
+            </div>
+
+            <div class="text-left">
+                <h1 class="text-2xl font-bold">
+                    Ngecor<span class="text-brand">.id</span>
+                </h1>
+                <p class="text-xs text-slate-500">
+                    Solusi Bangun & Renovasi Presisi
+                </p>
+            </div>
+        </button>
+
+        <div class="flex gap-2">
+            <button onclick="goToHome()"
+            class="px-4 py-2 text-sm bg-slate-100 rounded-xl">
+                <i class="fa-solid fa-house"></i> Beranda
+            </button>
+
+            <button onclick="openExitModal()"
+            class="px-4 py-2 text-sm text-brand bg-brand-light border border-brand-border rounded-xl">
+                <i class="fa-solid fa-right-from-bracket"></i> Keluar
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="flex gap-1 mt-4 pt-3 border-t overflow-x-auto pb-1 text-xs md:text-sm">
+
+        <button id="nav-material" onclick="navigateToTab('material')" class="nav-btn active">
+            <i class="fa-solid fa-calculator"></i> 1. Kalkulator
+        </button>
+
+        <button id="nav-panduan" onclick="navigateToTab('panduan')" class="nav-btn">
+            <i class="fa-solid fa-book-open"></i> 2. Panduan SOP
+        </button>
+
+        <button id="nav-k3" onclick="navigateToTab('k3')" class="nav-btn">
+            <i class="fa-solid fa-helmet-safety"></i> 3. Keselamatan (K3)
+            <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">Otomatis</span>
+        </button>
+
+        <button id="nav-ringkasan" onclick="navigateToTab('ringkasan')" class="nav-btn">
+            <i class="fa-solid fa-file-invoice"></i> 4. Ringkasan
+            <i id="nav-lock-ringkasan" class="fa-solid fa-lock text-[10px] text-slate-400"></i>
+        </button>
+
+        <button id="nav-campuran" onclick="navigateToTab('campuran')" class="nav-btn">
+            <i class="fa-solid fa-vial"></i> Takaran Campuran
+        </button>
+
+        <button id="nav-toko" onclick="navigateToTab('toko')" class="nav-btn">
+            <i class="fa-solid fa-store"></i> Toko Bangunan
+        </button>
+
+    </nav>
+</header>
+
+<style>
+.nav-btn {
+    padding: 10px 14px;
+    border-radius: 12px;
+    white-space: nowrap;
+    font-weight: 500;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: #f1f5f9;
+}
+
+.nav-btn.active {
+    background: #EE7D11;
+    color: white;
+    font-weight: bold;
+}
+
+.nav-btn.active span {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+.nav-btn.active i {
+    color: white !important;
+}
+
+.nav-btn.is-locked {
+    opacity: 0.55;
+}
+</style>
+
+<!-- STEPPER -->
+<div id="flow-stepper"
+class="bg-white rounded-2xl p-4 shadow-sm border mb-6 no-print">
+
+    <div class="flex items-center justify-between max-w-2xl mx-auto relative">
+
+        <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-200"></div>
+
+        <div id="stepper-line"
+        class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-brand transition-all duration-500"
+        style="width:0%"></div>
+
+        <button type="button" id="step-node-1" onclick="handleStepNodeClick(1)" class="step-node active" title="1. Hitung Dimensi & Material">1</button>
+        <button type="button" id="step-node-2" onclick="handleStepNodeClick(2)" class="step-node" title="2. Panduan Teknis SOP">2</button>
+        <button type="button" id="step-node-3" onclick="handleStepNodeClick(3)" class="step-node" title="3. Standar Keselamatan K3 (Otomatis)">3</button>
+        <button type="button" id="step-node-4" onclick="handleStepNodeClick(4)" class="step-node" title="4. Ringkasan & Estimasi Belanja">4</button>
+    </div>
+
+    <div class="flex justify-between max-w-2xl mx-auto text-[11px] md:text-xs mt-2 font-medium text-slate-500">
+        <span id="step-label-1" class="text-brand font-bold text-center">1. Kalkulator</span>
+        <span id="step-label-2" class="text-center">2. Panduan SOP</span>
+        <span id="step-label-3" class="text-center">3. K3 (Otomatis)</span>
+        <span id="step-label-4" class="text-center">4. Ringkasan</span>
+    </div>
+</div>
+
+<style>
+.step-node {
+    position: relative;
+    z-index: 2;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid white;
+}
+
+.step-node.active {
+    background: #EE7D11;
+    color: white;
+    box-shadow: 0 0 0 3px rgba(238, 125, 17, 0.25);
+}
+
+.step-node.completed {
+    background: #10B981;
+    color: white;
+}
+</style>
+
+<!-- CONTENT -->
+<main class="flex-1">
+
+<!-- 1. KALKULATOR MATERIAL -->
+<section id="tab-material" class="tab-content">
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border">
+
+        <h2 class="text-lg font-bold mb-4">
+            <i class="fa-solid fa-ruler-combined text-brand"></i>
+            Input Dimensi & Pekerjaan
+        </h2>
+
+        <form id="calc-form" onsubmit="event.preventDefault();processCalculationAndNext()">
+
+            <label class="text-xs font-semibold">Jenis Pekerjaan</label>
+
+            <select id="job-type" onchange="calculateMaterial()"
+            class="w-full p-3 rounded-xl border bg-slate-50 mb-4">
+
+                <option value="batako">Pasangan Batako</option>
+                <option value="cor">Cor Beton Structure</option>
+                <option value="bata">Pasangan Bata Merah</option>
+                <option value="plester">Pekerjaan Plesteran</option>
+                <option value="acian">Pekerjaan Acian</option>
+
+            </select>
+
+            <div class="grid grid-cols-3 gap-3">
+
+                <div>
+                    <label class="text-xs font-semibold">Panjang (m)</label>
+                    <input id="inp-length" type="number" value="10" min="0.1" step="0.1"
+                    oninput="calculateMaterial()"
+                    class="w-full p-3 border rounded-xl">
+                </div>
+
+                <div>
+                    <label class="text-xs font-semibold">Lebar (m)</label>
+                    <input id="inp-width" type="number" value="0.15" min="0.01" step="0.01"
+                    oninput="calculateMaterial()"
+                    class="w-full p-3 border rounded-xl">
+                </div>
+
+                <div>
+                    <label class="text-xs font-semibold">Tinggi (m)</label>
+                    <input id="inp-height" type="number" value="3" min="0.1" step="0.1"
+                    oninput="calculateMaterial()"
+                    class="w-full p-3 border rounded-xl">
+                </div>
+
+            </div>
+
+            <div class="p-3 bg-brand-light rounded-xl border border-brand-border mt-4 text-sm">
+                Volume Pekerjaan:
+                <strong id="lbl-volume" class="text-brand">30.00 m²</strong>
+            </div>
+
+            <button type="submit"
+            class="w-full mt-4 py-3 bg-brand hover:bg-brand-hover text-white font-bold rounded-xl">
+                Hitung & Lanjut ke Panduan
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+
+        </form>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border">
+
+        <h2 class="text-lg font-bold mb-4">
+            Estimasi Kebutuhan Material
+        </h2>
+
+        <div id="material-output-cards" class="space-y-3"></div>
+
+        <p class="text-xs text-slate-400 mt-5">
+            Catatan: Hasil merupakan estimasi awal, bukan perhitungan teknis final.
+        </p>
+    </div>
+
+</div>
+</section>
+
+<!-- 2. PANDUAN TUKANG -->
+<section id="tab-panduan" class="tab-content hidden">
+
+<div class="bg-white p-6 rounded-2xl shadow-sm border">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 bg-orange-100 text-brand rounded-full text-xs font-black uppercase tracking-wider">Tahap 2 Alur</span>
+                <h2 class="text-xl font-bold">Panduan Teknis & SOP Pengerjaan</h2>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+                Pahami metode pengerjaan yang benar. Alur berikutnya akan otomatis membawa Anda ke Verifikasi K3.
+            </p>
+        </div>
+
+        <div id="guide-job-badge" class="px-3 py-1.5 bg-slate-100 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-2 shrink-0">
+            <i class="fa-solid fa-hammer text-brand"></i>
+            <span>Pekerjaan: <strong id="guide-job-name" class="text-brand">Pasangan Batako</strong></span>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-6">
+        <button onclick="selectGuide('batako')" id="guide-btn-batako" class="guide-btn">Batako</button>
+        <button onclick="selectGuide('bata')" id="guide-btn-bata" class="guide-btn">Bata Merah</button>
+        <button onclick="selectGuide('plester')" id="guide-btn-plester" class="guide-btn">Plesteran</button>
+        <button onclick="selectGuide('acian')" id="guide-btn-acian" class="guide-btn">Acian</button>
+        <button onclick="selectGuide('cor')" id="guide-btn-cor" class="guide-btn">Pengecoran</button>
+    </div>
+
+    <div id="guide-steps-container"
+    class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+    <!-- Quick Mix Callout inside Guide -->
+    <div class="mt-6 p-4 bg-slate-50 border rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-orange-100 text-brand flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-vial text-lg"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-800">Rasio Campuran Adukan Terkait</p>
+                <p id="guide-mix-recommendation" class="text-xs text-slate-500">Standar perbandingan takaran volume untuk pekerjaan ini.</p>
+            </div>
+        </div>
+        <button type="button" onclick="navigateToTab('campuran')" class="text-xs font-bold text-brand hover:underline px-3 py-1.5 bg-white border border-brand-border rounded-xl">
+            Buka Visual Takaran Adukan <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>
+        </button>
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-8 pt-5 border-t">
+
+        <button type="button" onclick="navigateToTab('material')"
+        class="w-full sm:w-auto px-4 py-3 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-arrow-left"></i>
+            Kembali ke Input Dimensi
+        </button>
+
+        <button type="button" onclick="proceedToK3()"
+        class="w-full sm:w-auto px-6 py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-bold flex items-center justify-center gap-2 text-sm shadow-md transition-all">
+            <span>Pahami SOP & Lanjut ke Verifikasi K3</span>
+            <i class="fa-solid fa-helmet-safety text-base"></i>
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+    </div>
+</div>
+</section>
+
+<style>
+.guide-btn, .mix-btn {
+    padding: 8px 14px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.guide-btn.active, .mix-btn.active {
+    background: #EE7D11;
+    color: white;
+}
+</style>
+
+<!-- 3. KESELAMATAN K3 -->
+<section id="tab-k3" class="tab-content hidden">
+
+<!-- Alert Banner: Otomatis Terbuka -->
+<div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+    <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md">
+            <i class="fa-solid fa-shield-halved text-2xl"></i>
+        </div>
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 bg-amber-200 text-amber-900 rounded-full text-[10px] font-black tracking-wider uppercase">Tahap 3 Otomatis</span>
+                <h3 class="font-bold text-amber-950 text-base">Safety First: Verifikasi Standar K3 Konstruksi</h3>
+            </div>
+            <p class="text-xs text-amber-800 mt-1 max-w-2xl">
+                Dalam alur kerja proyek nyata, keselamatan kerja adalah SOP mutlak sebelum Surat Perintah Kerja (SPK) & Estimasi Belanja Material disetujui. Tahap ini otomatis terbuka untuk memastikan kesiapan APD dan lingkungan kerja sebelum melihat ringkasan.
+            </p>
+        </div>
+    </div>
+    <button type="button" onclick="checkAllK3()" class="whitespace-nowrap px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm transition-colors">
+        <i class="fa-solid fa-check-double"></i>
+        Tandai Semua Siap
+    </button>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+
+        <h3 class="font-bold mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-vest text-brand"></i>
+            APD (Alat Pelindung Diri)
+        </h3>
+
+        <div class="space-y-4">
+
+            <div class="flex gap-3">
+                <i class="fa-solid fa-helmet-safety text-2xl text-brand"></i>
+                <div>
+                    <b class="text-sm">Helm Proyek (Safety Helmet)</b>
+                    <p class="text-xs text-slate-500">Melindungi kepala dari benturan dan material jatuh dari atas.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <i class="fa-solid fa-shoe-prints text-2xl text-brand"></i>
+                <div>
+                    <b class="text-sm">Sepatu Safety (Steel Toe)</b>
+                    <p class="text-xs text-slate-500">Melindungi kaki dari paku tajam dan benturan material berat.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <i class="fa-solid fa-glasses text-2xl text-brand"></i>
+                <div>
+                    <b class="text-sm">Kacamata & Masker Debu</b>
+                    <p class="text-xs text-slate-500">Melindungi pernapasan dan mata dari serbuk semen halus.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <i class="fa-solid fa-mitten text-2xl text-brand"></i>
+                <div>
+                    <b class="text-sm">Sarung Tangan Kerja</b>
+                    <p class="text-xs text-slate-500">Mencegah kontak langsung dan iritasi basa semen pada kulit.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+
+        <h3 class="font-bold mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-screwdriver-wrench text-brand"></i>
+            Alat & Area Kerja Aman
+        </h3>
+
+        <div class="space-y-4">
+
+            <div class="flex gap-3">
+                <i class="fa-solid fa-toolbox text-2xl text-brand"></i>
+                <div>
+                    <b class="text-sm">Peralatan Kerja Layak</b>
+                    <p class="text-xs text-slate-500">Periksa kelayakan sendok spesi, roskam, dan jidar.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <i class="fa-solid fa-hammer text-2xl text-brand"></i>
+                <div>
+                    <b class="text-sm">Palu & Bodem Kokoh</b>
+                    <p class="text-xs text-slate-500">Pastikan gagang terpasang kuat, tidak longgar atau retak.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <i class="fa-solid fa-plug text-2xl text-brand"></i>
+                <div>
+                    <b class="text-sm">Instalasi Listrik Terisolasi</b>
+                    <p class="text-xs text-slate-500">Kabel molen atau gerinda tidak terkelupas dan bebas genangan air.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <i class="fa-solid fa-bars-staggered text-2xl text-brand"></i>
+                <div>
+                    <b class="text-sm">Perancah / Steger Stabil</b>
+                    <p class="text-xs text-slate-500">Dudukan di tanah padat dan terkunci dengan palang pengaku.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border shadow-sm flex flex-col justify-between">
+
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-check text-brand"></i>
+                    Checklist Kesiapan K3
+                </h3>
+                <span id="k3-count" class="text-xs font-extrabold text-brand bg-orange-50 px-2 py-0.5 rounded-md border border-brand-border">0/5 Siap</span>
+            </div>
+
+            <div id="k3-checklist-container" class="space-y-3">
+
+                <label class="flex items-start gap-3 text-xs md:text-sm p-2 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-200">
+                    <input type="checkbox" onchange="updateK3Checklist()" class="mt-0.5 w-4 h-4 rounded text-brand focus:ring-brand">
+                    <span>Area kerja bersih, tertata, dan bebas rintangan</span>
+                </label>
+
+                <label class="flex items-start gap-3 text-xs md:text-sm p-2 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-200">
+                    <input type="checkbox" onchange="updateK3Checklist()" class="mt-0.5 w-4 h-4 rounded text-brand focus:ring-brand">
+                    <span>Kabel & instalasi listrik diperiksa dan aman</span>
+                </label>
+
+                <label class="flex items-start gap-3 text-xs md:text-sm p-2 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-200">
+                    <input type="checkbox" onchange="updateK3Checklist()" class="mt-0.5 w-4 h-4 rounded text-brand focus:ring-brand">
+                    <span>APD lengkap (helm, rompi/sepatu, sarung tangan) dipakai</span>
+                </label>
+
+                <label class="flex items-start gap-3 text-xs md:text-sm p-2 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-200">
+                    <input type="checkbox" onchange="updateK3Checklist()" class="mt-0.5 w-4 h-4 rounded text-brand focus:ring-brand">
+                    <span>Scaffolding / perancah kerja terpasang kokoh & terkunci</span>
+                </label>
+
+                <label class="flex items-start gap-3 text-xs md:text-sm p-2 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-200">
+                    <input type="checkbox" onchange="updateK3Checklist()" class="mt-0.5 w-4 h-4 rounded text-brand focus:ring-brand">
+                    <span>Kotak P3K & sumber air darurat siap di lokasi</span>
+                </label>
+
+            </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t">
+            <button type="button" onclick="verifyK3AndNext()"
+            class="w-full py-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all">
+                <i class="fa-solid fa-shield-check text-base"></i>
+                <span>Verifikasi K3 & Buka Ringkasan</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <p class="text-[11px] text-slate-400 text-center mt-2">
+                *Klik verifikasi untuk membuka otomatis Ringkasan Material
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bottom Navigation for K3 -->
+<div class="flex justify-between items-center mt-6 pt-4 border-t no-print">
+    <button type="button" onclick="navigateToTab('panduan')" class="px-4 py-2.5 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 text-xs font-semibold flex items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i> Kembali ke Panduan
+    </button>
+    <button type="button" onclick="checkAllK3()" class="text-xs text-brand font-bold hover:underline flex items-center gap-1.5">
+        <i class="fa-solid fa-check-double"></i> Centang Semua Sekaligus
+    </button>
+</div>
+
+</section>
+
+<!-- 4. RINGKASAN -->
+<section id="tab-ringkasan" class="tab-content hidden">
+
+<div class="bg-white p-6 rounded-2xl shadow-sm border print-card">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-black uppercase tracking-wider">Tahap 4 Final</span>
+                <h2 class="text-2xl font-bold">Ringkasan Estimasi Material</h2>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+                Hasil perhitungan kebutuhan material presisi berdasarkan parameter dimensi dan standar teknis.
+            </p>
+        </div>
+
+        <div id="ringkasan-k3-badge"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Status K3 belum lengkap</span>
+        </div>
+    </div>
+
+    <!-- Info detail pekerjaan -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-xl border mb-5 text-xs">
+        <div>
+            <span class="text-slate-400 block">Pekerjaan</span>
+            <strong id="summary-job-title" class="text-slate-800 text-sm">Pasangan Batako</strong>
+        </div>
+        <div>
+            <span class="text-slate-400 block">Volume Efektif</span>
+            <strong id="summary-volume-title" class="text-brand text-sm">30.00 m²</strong>
+        </div>
+        <div>
+            <span class="text-slate-400 block">Status SOP</span>
+            <strong class="text-emerald-700 text-sm">Selesai Ditinjau</strong>
+        </div>
+        <div>
+            <span class="text-slate-400 block">Status K3</span>
+            <strong id="summary-k3-status-text" class="text-emerald-700 text-sm">Terverifikasi</strong>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+
+        <table class="w-full text-sm text-left">
+
+            <thead class="bg-slate-100">
+                <tr>
+                    <th class="p-3 rounded-l-lg">Nama Material</th>
+                    <th class="p-3">Volume Pekerjaan</th>
+                    <th class="p-3">Estimasi Jumlah</th>
+                    <th class="p-3 rounded-r-lg">Satuan</th>
+                </tr>
+            </thead>
+
+            <tbody id="summary-table-body"></tbody>
+
+        </table>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mt-6 pt-5 border-t no-print">
+
+        <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="window.print()"
+            class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-print"></i> Cetak / PDF
+            </button>
+
+            <button type="button" onclick="saveProject()"
+            class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-bookmark"></i> Simpan Proyek
+            </button>
+
+            <button type="button" onclick="navigateToTab('material')"
+            class="px-4 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left"></i> Edit Dimensi
+            </button>
+        </div>
+
+        <button type="button" onclick="navigateToTab('toko')"
+        class="px-5 py-2.5 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-md">
+            <span>Lanjut ke Toko Bangunan & Stok</span>
+            <i class="fa-solid fa-store"></i>
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+    </div>
+</div>
+</section>
+
+<!-- 5. KALKULATOR CAMPURAN -->
+<section id="tab-campuran" class="tab-content hidden">
+
+<div class="bg-white p-6 rounded-2xl shadow-sm border">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+            <h2 class="text-xl font-bold">Kalkulator Rasio Campuran Adukan</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Visualisasi perbandingan takaran volume material semen, pasir, kerikil, dan air.</p>
+        </div>
+        <button type="button" onclick="navigateToTab('panduan')" class="w-fit px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 no-print">
+            <i class="fa-solid fa-arrow-left"></i> Kembali ke Panduan
+        </button>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+
+        <button id="mix-btn-cor" onclick="selectMix('cor')" class="mix-btn">Cor (1:2:3)</button>
+        <button id="mix-btn-plester" onclick="selectMix('plester')" class="mix-btn">Plester (1:4)</button>
+        <button id="mix-btn-acian" onclick="selectMix('acian')" class="mix-btn">Acian (1:0)</button>
+        <button id="mix-btn-pasangan" onclick="selectMix('pasangan')" class="mix-btn">Pasangan (1:5)</button>
+
+    </div>
+
+    <div class="flex flex-wrap items-end justify-center gap-6 py-8 my-5 bg-slate-50 rounded-2xl">
+
+        <div class="text-center">
+            <p class="text-xs font-bold mb-2">Semen</p>
+            <div class="beaker">
+                <div id="fill-semen" class="beaker-fill fill-semen"></div>
+            </div>
+            <b id="ratio-semen" class="text-xl">1</b>
+        </div>
+
+        <span class="text-2xl">:</span>
+
+        <div class="text-center">
+            <p class="text-xs font-bold mb-2">Pasir</p>
+            <div class="beaker">
+                <div id="fill-pasir" class="beaker-fill fill-pasir"></div>
+            </div>
+            <b id="ratio-pasir" class="text-xl">2</b>
+        </div>
+
+        <span class="text-2xl">:</span>
+
+        <div class="text-center">
+            <p class="text-xs font-bold mb-2">Kerikil</p>
+            <div class="beaker">
+                <div id="fill-kerikil" class="beaker-fill fill-kerikil"></div>
+            </div>
+            <b id="ratio-kerikil" class="text-xl">3</b>
+        </div>
+
+        <span class="text-2xl">:</span>
+
+        <div class="text-center">
+            <p class="text-xs font-bold mb-2">Air</p>
+            <div class="beaker">
+                <div id="fill-air" class="beaker-fill fill-air"></div>
+            </div>
+            <b id="ratio-air" class="text-xl">0.5</b>
+        </div>
+
+    </div>
+
+    <p class="text-xs text-slate-500 text-center">
+        Rasio merupakan ilustrasi perbandingan volume. Kebutuhan air dan komposisi akhir harus disesuaikan dengan spesifikasi pekerjaan.
+    </p>
+
+</div>
+</section>
+
+<!-- 6. TOKO BANGUNAN -->
+<section id="tab-toko" class="tab-content hidden">
+
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 no-print">
+    <div>
+        <span class="px-2.5 py-0.5 bg-brand-light text-brand border border-brand-border rounded-full text-xs font-bold uppercase tracking-wider">Tahap Belanja</span>
+        <h2 class="text-xl font-bold mt-1">Cek Ketersediaan Stok Toko Bangunan Mitra</h2>
+        <p class="text-xs text-slate-500">Pilih toko terdekat untuk mengecek ketersediaan material yang telah dihitung.</p>
+    </div>
+    <button type="button" onclick="navigateToTab('ringkasan')" class="w-fit px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i> Kembali ke Ringkasan
+    </button>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+
+        <h2 class="text-lg font-bold mb-4">Daftar Toko Bangunan</h2>
+
+        <div id="stores-container" class="space-y-3">
+
+            <button onclick="selectStore(1)" id="store-card-1"
+            class="store-card selected">
+                <div>
+                    <b>TB Maju Jaya</b>
+                    <p class="text-xs text-slate-500">Jl. Nusantara No. 23, Sidoarjo</p>
+                    <p class="text-xs text-slate-400">Kontak: 0812-3456-7890</p>
+                </div>
+                <span class="text-emerald-600 text-xs font-bold">BUKA</span>
+            </button>
+
+            <button onclick="selectStore(2)" id="store-card-2"
+            class="store-card">
+                <div>
+                    <b>Material Sejahtera</b>
+                    <p class="text-xs text-slate-500">Jl. Raya Industri No. 88, Surabaya</p>
+                    <p class="text-xs text-slate-400">Kontak: 0813-9876-5432</p>
+                </div>
+                <span class="text-emerald-600 text-xs font-bold">BUKA</span>
+            </button>
+
+            <button onclick="selectStore(3)" id="store-card-3"
+            class="store-card">
+                <div>
+                    <b>Material Jaya Utama</b>
+                    <p class="text-xs text-slate-500">Jl. Veteran No. 12, Gresik</p>
+                    <p class="text-xs text-slate-400">Kontak: 0851-0011-2233</p>
+                </div>
+                <span class="text-red-600 text-xs font-bold">TUTUP</span>
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+
+        <h2 class="text-lg font-bold mb-4">Daftar Stok Material</h2>
+
+        <p id="selected-store-name" class="text-brand font-bold text-sm mb-4">
+            TB Maju Jaya
+        </p>
+
+        <div id="stock-list-container" class="space-y-3"></div>
+
+        <p class="text-xs text-slate-400 mt-5">
+            Data toko dan stok pada contoh ini bersifat simulasi, bukan data langsung.
+        </p>
+
+    </div>
+
+</div>
+</section>
+
+</main>
+</div>
+
+<style>
+.store-card {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+}
+
+.store-card.selected {
+    border: 2px solid #EE7D11;
+    background: #FFF4EA;
+}
+</style>
+
+<!-- EXIT MODAL -->
+<div id="exit-modal"
+class="fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center">
+
+        <h3 class="text-lg font-bold mb-4">Keluar dari Aplikasi?</h3>
+
+        <h2 class="text-2xl font-black mb-6">
+            Ngecor<span class="text-brand">.id</span>
+        </h2>
+
+        <div class="grid grid-cols-2 gap-3">
+
+            <button onclick="closeExitModal()"
+            class="py-3 bg-slate-400 text-white rounded-xl">
+                Batal
+            </button>
+
+            <button onclick="confirmExit()"
+            class="py-3 bg-brand text-white rounded-xl">
+                Keluar
+            </button>
+
+        </div>
+    </div>
+</div>
+
+<footer class="bg-white border-t py-4 text-center text-xs text-slate-400 mt-8 no-print">
+    © 2026 Ngecor.id - Aplikasi Perhitungan & Material Konstruksi Bangunan
+</footer>
+
+<script>
+// ===================================
+// GLOBAL APP STATE & STEP CONTROLLER
+// ===================================
+
+let currentTab = 'material';
+let calculatedResults = {};
+let highestUnlockedStep = 1; // 1: material, 2: panduan, 3: k3, 4: ringkasan
+let k3Verified = false;
+let hasCalculated = false;
+
+// ===================================
+// DATA PANDUAN TUKANG & SOP
+// ===================================
+
+const guideData = {
+    batako: [
+        {
+            step: 'Step 1: Penebaran Mortar Dasar',
+            desc: 'Siapkan adukan spesi 1:5 dan ratakan pada permukaan sloof/pondasi sebagai alas.',
+            icon: 'fa-cubes-stacked'
+        },
+        {
+            step: 'Step 2: Alignment & Benang Sipatan',
+            desc: 'Pasang batako dari kedua sudut dinding terlebih dahulu, lalu tarik benang acuan lurus.',
+            icon: 'fa-ruler-horizontal'
+        },
+        {
+            step: 'Step 3: Leveling & Ketegakan',
+            desc: 'Gunakan waterpass dan unting-unting pada tiap lapis untuk memastikan dinding tegak rata.',
+            icon: 'fa-vial'
+        },
+        {
+            step: 'Step 4: Pengisian Siar Sambungan',
+            desc: 'Isi siar vertikal dan horizontal antarbatako secara padat tanpa ada rongga kosong.',
+            icon: 'fa-fill-drip'
+        }
+    ],
+
+    bata: [
+        {
+            step: 'Step 1: Perendaman Bata Merah',
+            desc: 'Rendam batu bata dalam air sejenak sebelum dipasang agar tidak menyedot air semen adukan.',
+            icon: 'fa-droplet'
+        },
+        {
+            step: 'Step 2: Pasang Profil & Benang Acuan',
+            desc: 'Tegakkan mistar ukur di sudut dinding dan rentangkan benang pedoman tiap baris bata.',
+            icon: 'fa-ruler-horizontal'
+        },
+        {
+            step: 'Step 3: Tebar Mortar Spesi 1:4 / 1:5',
+            desc: 'Hamparkan spesi setebal 1.5 - 2 cm merata, lalu tekan bata ke posisi secara mantap.',
+            icon: 'fa-layer-group'
+        },
+        {
+            step: 'Step 4: Susunan Berselang & Kerapihan',
+            desc: 'Pastikan pola pasangan bata berselang setengah panjang (staggered) dan siar rapi.',
+            icon: 'fa-cubes'
+        }
+    ],
+
+    plester: [
+        {
+            step: 'Step 1: Pembersihan & Kamprotan Dinding',
+            desc: 'Bersihkan debu, basahi permukaan bata, lalu semprotkan adukan kasar (kamprot) sebagai kunci.',
+            icon: 'fa-spray-can'
+        },
+        {
+            step: 'Step 2: Pembuatan Kepalaan Plester',
+            desc: 'Buat jalur kepalaan vertikal dengan lot/waterpass selebar 1.5 - 2 cm sebagai batas ketebalan.',
+            icon: 'fa-ruler-horizontal'
+        },
+        {
+            step: 'Step 3: Penarikan Jidar Aluminium',
+            desc: 'Tarik adukan plester mengikuti jalur kepalaan dengan jidar panjang dari bawah ke atas.',
+            icon: 'fa-ruler-vertical'
+        },
+        {
+            step: 'Step 4: Penggosokan & Perataan',
+            desc: 'Ratakan permukaan dengan roskam kayu/busa hingga padat dan tidak bergelombang.',
+            icon: 'fa-hand-sparkles'
+        }
+    ],
+
+    acian: [
+        {
+            step: 'Step 1: Curing & Persiapan Plesteran',
+            desc: 'Pastikan plesteran sudah berusia minimal 2-3 hari, tidak basah kuyup namun cukup lembap.',
+            icon: 'fa-droplet'
+        },
+        {
+            step: 'Step 2: Pencampuran Bubuk Acian',
+            desc: 'Campur semen acian instan atau PC dengan air bersih hingga berbentuk pasta homogen tanpa gumpalan.',
+            icon: 'fa-blender'
+        },
+        {
+            step: 'Step 3: Aplikasi Roskam Besi',
+            desc: 'Oleskan pasta acian setebal 1.5 - 3 mm secara merata menggunakan roskam baja halus.',
+            icon: 'fa-paint-roller'
+        },
+        {
+            step: 'Step 4: Finishing Halus & Pengeringan',
+            desc: 'Gosok lembut dengan kertas semen basah atau spon halus untuk menghasilkan permukaan mulus mengilap.',
+            icon: 'fa-sparkles'
+        }
+    ],
+
+    cor: [
+        {
+            step: 'Step 1: Pengecekan Bekisting & Penulangan',
+            desc: 'Pastikan bekisting kuat, kedap, disokong kokoh, dan selimut beton tulangan sudah memakai beton tahu.',
+            icon: 'fa-boxes-packing'
+        },
+        {
+            step: 'Step 2: Pencampuran Adukan (1:2:3)',
+            desc: 'Aduk semen, pasir beton, kerikil split, dan air secara merata menggunakan molen mixer.',
+            icon: 'fa-arrows-rotate'
+        },
+        {
+            step: 'Step 3: Penuangan & Pemadatan Vibrator',
+            desc: 'Tuang beton kontinu lapis demi lapis dan padatkan dengan vibrator agar tidak keropos (honeycomb).',
+            icon: 'fa-bucket'
+        },
+        {
+            step: 'Step 4: Perawatan Beton (Curing)',
+            desc: 'Lakukan penyiraman air atau penutupan karung goni basah selama minimal 7 hari agar mutu tercapai.',
+            icon: 'fa-faucet-drip'
+        }
+    ]
+};
+
+// ===================================
+// KONTROL ALUR & NAVIGASI REALISTIS
+// ===================================
+
+function navigateToTab(tabId) {
+    if (tabId === 'material') {
+        switchTab('material');
+        return;
+    }
+
+    if (tabId === 'panduan') {
+        if (highestUnlockedStep < 2) {
+            showToast('Langkah 2 Terkunci: Masukkan dimensi lalu klik "Hitung & Lanjut".', 'warning');
+            return;
+        }
+        switchTab('panduan');
+        return;
+    }
+
+    if (tabId === 'k3') {
+        if (highestUnlockedStep < 3) {
+            showToast('ℹ️ Tahap K3 akan otomatis terbuka saat Anda melanjutkan dari Panduan SOP!', 'info');
+            return;
+        }
+        switchTab('k3');
+        return;
+    }
+
+    if (tabId === 'ringkasan') {
+        if (highestUnlockedStep < 4 || !k3Verified) {
+            showToast('🔒 Ringkasan Terkunci: Alur konstruksi mewajibkan verifikasi K3 terlebih dahulu.', 'warning');
+            return;
+        }
+        switchTab('ringkasan');
+        return;
+    }
+
+    if (tabId === 'campuran') {
+        switchTab('campuran');
+        return;
+    }
+
+    if (tabId === 'toko') {
+        if (highestUnlockedStep < 4) {
+            showToast('ℹ️ Disarankan menyelesaikan perhitungan material dan K3 agar daftar belanja akurat.', 'info');
+        }
+        switchTab('toko');
+        return;
+    }
+}
+
+function handleStepNodeClick(stepNum) {
+    const tabMap = { 1: 'material', 2: 'panduan', 3: 'k3', 4: 'ringkasan' };
+    const targetTab = tabMap[stepNum];
+
+    if (stepNum > highestUnlockedStep) {
+        if (stepNum === 2) {
+            showToast('Langkah 2 terkunci. Masukkan dimensi lalu klik "Hitung & Lanjut".', 'warning');
+        } else if (stepNum === 3) {
+            showToast('Langkah 3 (K3) akan terbuka otomatis setelah Anda meninjau Panduan SOP.', 'info');
+        } else if (stepNum === 4) {
+            showToast('Langkah 4 (Ringkasan) terkunci sampai verifikasi K3 selesai.', 'warning');
+        }
+        return;
+    }
+
+    navigateToTab(targetTab);
+}
+
+function switchTab(tabId) {
+    currentTab = tabId;
+
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+    });
+
+    const target = document.getElementById(`tab-${tabId}`);
+    if (target) {
+        target.classList.remove('hidden');
+    }
+
+    updateNavAndStepper();
+}
+
+function updateNavAndStepper() {
+    const stepMap = {
+        material: 1,
+        panduan: 2,
+        k3: 3,
+        ringkasan: 4
+    };
+
+    let step = stepMap[currentTab];
+    if (!step) {
+        step = currentTab === 'toko' ? 4 : (currentTab === 'campuran' ? 2 : 1);
+    }
+
+    const percentages = {
+        1: '0%',
+        2: '33%',
+        3: '66%',
+        4: '100%'
+    };
+
+    const line = document.getElementById('stepper-line');
+    if (line) {
+        line.style.width = percentages[step];
+    }
+
+    for (let i = 1; i <= 4; i++) {
+        const node = document.getElementById(`step-node-${i}`);
+        const label = document.getElementById(`step-label-${i}`);
+
+        if (node) {
+            node.classList.remove('active', 'completed');
+            if (i === step) {
+                node.classList.add('active');
+            } else if (i < step || i <= highestUnlockedStep) {
+                node.classList.add('completed');
+            }
+        }
+
+        if (label) {
+            if (i === step) {
+                label.className = 'text-brand font-bold text-center';
+            } else if (i <= highestUnlockedStep) {
+                label.className = 'text-emerald-700 font-semibold text-center';
+            } else {
+                label.className = 'text-slate-400 font-normal text-center';
+            }
+        }
+    }
+
+    // Update Nav buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    const activeButton = document.getElementById(`nav-${currentTab}`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+
+    // Update lock status on Ringkasan
+    const lockIcon = document.getElementById('nav-lock-ringkasan');
+    if (lockIcon) {
+        if (highestUnlockedStep >= 4 && k3Verified) {
+            lockIcon.className = 'fa-solid fa-check text-[10px] text-emerald-500';
+        } else {
+            lockIcon.className = 'fa-solid fa-lock text-[10px] text-slate-400';
+        }
+    }
+}
+
+// ===================================
+// KALKULATOR MATERIAL (STEP 1)
+// ===================================
+
+function calculateMaterial() {
+    const jobType = document.getElementById('job-type').value;
+
+    const length = parseFloat(
+        document.getElementById('inp-length').value
+    ) || 0;
+
+    const width = parseFloat(
+        document.getElementById('inp-width').value
+    ) || 0;
+
+    const height = parseFloat(
+        document.getElementById('inp-height').value
+    ) || 0;
+
+    const area = length * height;
+    const volume = length * width * height;
+
+    let semen = 0;
+    let pasir = 0;
+    let utama = 0;
+
+    let utamaName = 'Batako';
+    let unitUtama = 'pcs';
+
+    if (jobType === 'batako') {
+        document.getElementById('lbl-volume').innerText = `${area.toFixed(2)} m²`;
+        utama = Math.ceil(area * 12.5);
+        semen = area * 0.25;
+        pasir = area * 0.02;
+        utamaName = 'Batako Press';
+    } else if (jobType === 'cor') {
+        document.getElementById('lbl-volume').innerText = `${volume.toFixed(2)} m³`;
+        semen = volume * 8;
+        pasir = volume * 0.5;
+        utama = volume * 0.8;
+        utamaName = 'Kerikil / Split';
+        unitUtama = 'm³';
+    } else if (jobType === 'bata') {
+        document.getElementById('lbl-volume').innerText = `${area.toFixed(2)} m²`;
+        utama = Math.ceil(area * 70);
+        semen = area * 0.35;
+        pasir = area * 0.035;
+        utamaName = 'Bata Merah';
+    } else if (jobType === 'plester') {
+        document.getElementById('lbl-volume').innerText = `${area.toFixed(2)} m²`;
+        semen = area * 0.18;
+        pasir = area * 0.025;
+    } else if (jobType === 'acian') {
+        document.getElementById('lbl-volume').innerText = `${area.toFixed(2)} m²`;
+        semen = area * 0.08;
+    }
+
+    calculatedResults = {
+        jobType,
+        length,
+        width,
+        height,
+        area,
+        volume,
+        semen: semen.toFixed(1),
+        pasir: pasir.toFixed(2),
+        utama: Number(utama.toFixed(2)),
+        utamaName,
+        unitUtama
+    };
+
+    renderOutputCards();
+    renderSummaryTable();
+    updateGuideDetails(jobType);
+}
+
+function renderOutputCards() {
+    const container = document.getElementById('material-output-cards');
+
+    let html = `
+        <div class="p-4 bg-slate-50 rounded-xl border flex justify-between items-center">
+            <div>
+                <b class="text-sm">Semen PPC (50kg)</b>
+                <p class="text-xs text-slate-400">Material perekat</p>
+            </div>
+            <strong class="text-xl text-brand">
+                ${calculatedResults.semen} sak
+            </strong>
+        </div>
+    `;
+
+    if (Number(calculatedResults.pasir) > 0) {
+        html += `
+            <div class="p-4 bg-slate-50 rounded-xl border flex justify-between items-center">
+                <div>
+                    <b class="text-sm">Pasir Pasang/Cor</b>
+                    <p class="text-xs text-slate-400">Agregat halus</p>
+                </div>
+                <strong class="text-xl text-brand">
+                    ${calculatedResults.pasir} m³
+                </strong>
+            </div>
+        `;
+    }
+
+    if (calculatedResults.utama > 0) {
+        html += `
+            <div class="p-4 bg-slate-50 rounded-xl border flex justify-between items-center">
+                <div>
+                    <b class="text-sm">${calculatedResults.utamaName}</b>
+                    <p class="text-xs text-slate-400">Material utama dinding/struktur</p>
+                </div>
+                <strong class="text-xl text-brand">
+                    ${calculatedResults.utama} ${calculatedResults.unitUtama}
+                </strong>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+function renderSummaryTable() {
+    const body = document.getElementById('summary-table-body');
+    if (!body) return;
+
+    const volumeText =
+        calculatedResults.jobType === 'cor'
+        ? `${calculatedResults.volume.toFixed(2)} m³`
+        : `${calculatedResults.area.toFixed(2)} m²`;
+
+    let rows = `
+        <tr class="border-b">
+            <td class="p-3 font-bold text-slate-800">Semen PPC 50kg</td>
+            <td class="p-3 text-slate-600">${volumeText}</td>
+            <td class="p-3 text-brand font-bold">
+                ${calculatedResults.semen}
+            </td>
+            <td class="p-3 text-slate-600">sak</td>
+        </tr>
+    `;
+
+    if (Number(calculatedResults.pasir) > 0) {
+        rows += `
+            <tr class="border-b">
+                <td class="p-3 font-bold text-slate-800">Pasir</td>
+                <td class="p-3 text-slate-600">${volumeText}</td>
+                <td class="p-3 font-bold text-slate-800">${calculatedResults.pasir}</td>
+                <td class="p-3 text-slate-600">m³</td>
+            </tr>
+        `;
+    }
+
+    if (calculatedResults.utama > 0) {
+        rows += `
+            <tr class="border-b">
+                <td class="p-3 font-bold text-slate-800">
+                    ${calculatedResults.utamaName}
+                </td>
+                <td class="p-3 text-slate-600">${volumeText}</td>
+                <td class="p-3 text-brand font-bold">
+                    ${calculatedResults.utama}
+                </td>
+                <td class="p-3 text-slate-600">
+                    ${calculatedResults.unitUtama}
+                </td>
+            </tr>
+        `;
+    }
+
+    body.innerHTML = rows;
+}
+
+// PROSES DARI STEP 1 KE STEP 2 (PANDUAN)
+function processCalculationAndNext() {
+    calculateMaterial();
+    hasCalculated = true;
+    highestUnlockedStep = Math.max(highestUnlockedStep, 2);
+
+    const jobType = document.getElementById('job-type').value;
+    selectGuide(jobType);
+
+    // Otomatis sinkronisasi rasio adukan
+    const mixMap = {
+        cor: 'cor',
+        plester: 'plester',
+        acian: 'acian',
+        batako: 'pasangan',
+        bata: 'pasangan'
+    };
+    if (mixMap[jobType]) {
+        selectMix(mixMap[jobType]);
+    }
+
+    updateGuideDetails(jobType);
+    updateNavAndStepper();
+    switchTab('panduan');
+    showToast('✓ Kalkulasi selesai! Pelajari panduan pengerjaan sebelum verifikasi K3.', 'info');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===================================
+// PANDUAN TUKANG & SOP (STEP 2)
+// ===================================
+
+function selectGuide(type) {
+    document.querySelectorAll('.guide-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    const activeBtn = document.getElementById(`guide-btn-${type}`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+
+    const container = document.getElementById('guide-steps-container');
+    const steps = guideData[type] || guideData.batako;
+
+    container.innerHTML = steps.map(step => `
+        <div class="p-4 bg-slate-50 rounded-xl border flex gap-3">
+            <div class="w-10 h-10 bg-white text-brand rounded-xl flex items-center justify-center shrink-0 border shadow-xs">
+                <i class="fa-solid ${step.icon}"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm text-slate-800">${step.step}</h4>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                    ${step.desc}
+                </p>
+            </div>
+        </div>
+    `).join('');
+
+    updateGuideDetails(type);
+}
+
+function updateGuideDetails(jobType) {
+    const jobNames = {
+        batako: 'Pasangan Batako',
+        bata: 'Pasangan Bata Merah',
+        cor: 'Cor Beton Structure',
+        plester: 'Pekerjaan Plesteran',
+        acian: 'Pekerjaan Acian'
+    };
+
+    const mixTips = {
+        batako: 'Rasio adukan spesi batako disarankan 1 Semen : 5 Pasir untuk kekuatan optimal.',
+        bata: 'Rasio adukan pasangan bata merah disarankan 1 Semen : 4 atau 5 Pasir pasang.',
+        cor: 'Rasio campuran beton struktur mutu standar adalah 1 Semen : 2 Pasir : 3 Kerikil Split.',
+        plester: 'Rasio adukan plesteran dinding adalah 1 Semen : 4 Pasir halus.',
+        acian: 'Gunakan pasta semen murni tanpa pasir dengan air secukupnya.'
+    };
+
+    const name = jobNames[jobType] || jobType;
+    const guideJobName = document.getElementById('guide-job-name');
+    if (guideJobName) guideJobName.innerText = name;
+
+    const mixRec = document.getElementById('guide-mix-recommendation');
+    if (mixRec && mixTips[jobType]) {
+        mixRec.innerText = mixTips[jobType];
+    }
+
+    const summaryJobTitle = document.getElementById('summary-job-title');
+    if (summaryJobTitle) summaryJobTitle.innerText = name;
+
+    const summaryVolumeTitle = document.getElementById('summary-volume-title');
+    if (summaryVolumeTitle && calculatedResults.area !== undefined) {
+        summaryVolumeTitle.innerText = (jobType === 'cor') ? `${calculatedResults.volume.toFixed(2)} m³` : `${calculatedResults.area.toFixed(2)} m²`;
+    }
+}
+
+// ALUR OTOMATIS: DARI STEP 2 KE STEP 3 (K3)
+function proceedToK3() {
+    highestUnlockedStep = Math.max(highestUnlockedStep, 3);
+    updateNavAndStepper();
+    switchTab('k3');
+    showToast('🛡️ Membuka otomatis tahap Keselamatan Kerja (K3)...', 'warning');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===================================
+// KESELAMATAN K3 (STEP 3) - OTOMATIS
+// ===================================
+
+function checkAllK3() {
+    const checkboxes = document.querySelectorAll('#k3-checklist-container input[type="checkbox"]');
+    checkboxes.forEach(box => box.checked = true);
+    updateK3Checklist();
+    showToast('✓ Seluruh checklist K3 telah ditandai Siap!', 'success');
+}
+
+function updateK3Checklist() {
+    const checkboxes = document.querySelectorAll('#k3-checklist-container input[type="checkbox"]');
+    let count = 0;
+    checkboxes.forEach(box => {
+        if (box.checked) count++;
+    });
+
+    const countElem = document.getElementById('k3-count');
+    if (countElem) {
+        countElem.innerText = `${count}/${checkboxes.length} Siap`;
+    }
+
+    const badge = document.getElementById('ringkasan-k3-badge');
+    const k3StatusText = document.getElementById('summary-k3-status-text');
+
+    if (count === checkboxes.length) {
+        k3Verified = true;
+        if (badge) {
+            badge.className = 'inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+            badge.innerHTML = '<i class="fa-solid fa-shield-check text-emerald-600"></i><span>Standar K3 Terverifikasi (Aman & Siap Kerja)</span>';
+        }
+        if (k3StatusText) {
+            k3StatusText.innerText = 'Terverifikasi';
+            k3StatusText.className = 'text-emerald-700 text-sm font-bold';
+        }
+    } else {
+        k3Verified = false;
+        if (badge) {
+            badge.className = 'inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200';
+            badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-600"></i><span>Checklist K3 Belum Lengkap (${count}/${checkboxes.length})</span>`;
+        }
+        if (k3StatusText) {
+            k3StatusText.innerText = `Belum Lengkap (${count}/${checkboxes.length})`;
+            k3StatusText.className = 'text-amber-700 text-sm font-bold';
+        }
+    }
+}
+
+// VERIFIKASI K3 DAN BUKA RINGKASAN SECARA OTOMATIS
+function verifyK3AndNext() {
+    const checkboxes = document.querySelectorAll('#k3-checklist-container input[type="checkbox"]');
+    const unchecked = Array.from(checkboxes).filter(box => !box.checked);
+
+    if (unchecked.length > 0) {
+        const confirmed = confirm(
+            `Masih ada ${unchecked.length} poin checklist K3 yang belum dicentang.\n\nDalam pekerjaan riil, keselamatan kerja adalah prioritas mutlak.\nApakah Anda menyatakan seluruh standar keselamatan telah dipenuhi dan ingin membuka Ringkasan Material?`
+        );
+        if (!confirmed) {
+            showToast('Lengkapi checklist K3 sebelum melanjutkan.', 'warning');
+            return;
+        }
+        checkboxes.forEach(box => box.checked = true);
+        updateK3Checklist();
+    }
+
+    k3Verified = true;
+    highestUnlockedStep = 4;
+    updateNavAndStepper();
+    switchTab('ringkasan');
+    showToast('✓ Standar K3 Terverifikasi! Ringkasan material berhasil diterbitkan.', 'success');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===================================
+// KALKULATOR CAMPURAN (TAKATION)
+// ===================================
+
+function selectMix(type) {
+    document.querySelectorAll('.mix-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    const activeBtn = document.getElementById(`mix-btn-${type}`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+
+    const ratios = {
+        cor: {
+            s: 1, p: 2, k: 3, a: 0.5,
+            fs: 35, fp: 65, fk: 95, fa: 25
+        },
+        plester: {
+            s: 1, p: 4, k: 0, a: 0.5,
+            fs: 35, fp: 95, fk: 0, fa: 25
+        },
+        acian: {
+            s: 1, p: 0, k: 0, a: 0.4,
+            fs: 40, fp: 0, fk: 0, fa: 20
+        },
+        pasangan: {
+            s: 1, p: 5, k: 0, a: 0.6,
+            fs: 30, fp: 100, fk: 0, fa: 30
+        }
+    };
+
+    const ratio = ratios[type];
+    if (!ratio) return;
+
+    document.getElementById('ratio-semen').innerText = ratio.s;
+    document.getElementById('ratio-pasir').innerText = ratio.p;
+    document.getElementById('ratio-kerikil').innerText = ratio.k;
+    document.getElementById('ratio-air').innerText = ratio.a;
+
+    document.getElementById('fill-semen').style.height = `${ratio.fs}%`;
+    document.getElementById('fill-pasir').style.height = `${ratio.fp}%`;
+    document.getElementById('fill-kerikil').style.height = `${ratio.fk}%`;
+    document.getElementById('fill-air').style.height = `${ratio.fa}%`;
+}
+
+// ===================================
+// DATA TOKO DAN STOK
+// ===================================
+
+const storeStocks = {
+    1: [
+        { name: 'Semen PPC (50kg)', amount: '120 sak' },
+        { name: 'Pasir Coklat/Pasang', amount: '50 m³' },
+        { name: 'Batako Press Super', amount: '1500 pcs' }
+    ],
+    2: [
+        { name: 'Semen PPC (50kg)', amount: '85 sak' },
+        { name: 'Pasir Hitam Cor', amount: '30 m³' },
+        { name: 'Bata Merah Oven', amount: '5000 pcs' }
+    ],
+    3: [
+        { name: 'Semen PPC (50kg)', amount: '0 sak (Habis)' },
+        { name: 'Kerikil Split', amount: '12 m³' }
+    ]
+};
+
+function selectStore(id) {
+    document.querySelectorAll('.store-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+
+    const selectedCard = document.getElementById(`store-card-${id}`);
+    if (selectedCard) {
+        selectedCard.classList.add('selected');
+    }
+
+    const names = {
+        1: 'TB Maju Jaya',
+        2: 'Material Sejahtera',
+        3: 'Material Jaya Utama'
+    };
+
+    document.getElementById('selected-store-name').innerText = names[id];
+
+    const container = document.getElementById('stock-list-container');
+    container.innerHTML = storeStocks[id].map(stock => `
+        <div class="p-3 bg-slate-50 rounded-xl border flex justify-between items-center">
+            <span class="font-semibold text-sm text-slate-800">${stock.name}</span>
+            <strong class="text-brand text-sm">${stock.amount}</strong>
+        </div>
+    `).join('');
+}
+
+// ===================================
+// SIMPAN PROYEK & EXPORT
+// ===================================
+
+function saveProject() {
+    if (!calculatedResults.jobType) {
+        showToast('Belum ada data perhitungan untuk disimpan.', 'warning');
+        return;
+    }
+
+    const projectData = {
+        tanggal: new Date().toLocaleString('id-ID'),
+        hasil: calculatedResults,
+        k3Verified: k3Verified
+    };
+
+    localStorage.setItem('ngecorProject', JSON.stringify(projectData));
+    showToast('✓ Proyek dan estimasi material berhasil disimpan!', 'success');
+}
+
+function downloadPDF() {
+    switchTab('ringkasan');
+    setTimeout(() => {
+        window.print();
+    }, 300);
+}
+
+// ===================================
+// MODAL KELUAR
+// ===================================
+
+function openExitModal() {
+    const modal = document.getElementById('exit-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeExitModal() {
+    const modal = document.getElementById('exit-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function confirmExit() {
+    closeExitModal();
+    goToHome();
+}
+
+function goToHome() {
+    switchTab('material');
+}
+
+// ===================================
+// TOAST NOTIFIKASI ELEGAN
+// ===================================
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    const bgColors = {
+        success: 'bg-emerald-600 text-white',
+        warning: 'bg-amber-600 text-white',
+        error: 'bg-red-600 text-white',
+        info: 'bg-slate-800 text-white'
+    };
+    const icons = {
+        success: 'fa-circle-check',
+        warning: 'fa-triangle-exclamation',
+        error: 'fa-circle-xmark',
+        info: 'fa-circle-info'
+    };
+
+    toast.className = `${bgColors[type] || bgColors.info} px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 translate-y-3 opacity-0 pointer-events-auto border border-white/20`;
+    toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-sm"></i><span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove('translate-y-3', 'opacity-0');
+    }, 20);
+
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+// ===================================
+// INISIALISASI APLIKASI
+// ===================================
+
+window.onload = function() {
+    const progress = document.getElementById('splash-progress');
+    if (progress) {
+        progress.style.width = '100%';
+    }
+
+    setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+            splash.classList.add('opacity-0');
+            setTimeout(() => {
+                splash.classList.add('hidden');
+            }, 500);
+        }
+    }, 1000);
+
+    calculateMaterial();
+    selectGuide('batako');
+    selectMix('cor');
+    selectStore(1);
+    updateK3Checklist();
+    updateNavAndStepper();
+};
+</script>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+</body>
+</html>
